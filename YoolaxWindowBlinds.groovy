@@ -111,7 +111,7 @@ def parse(String description) {
 def convertBatteryLevel(rawValue) {
     def batteryLevel = rawValue - 50
     batteryLevel = batteryLevel * 100
-	batteryLevel = batteryLevel.intdiv(150)
+    batteryLevel = batteryLevel.intdiv(150)
     return batteryLevel
 }
 

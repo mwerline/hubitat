@@ -17,7 +17,7 @@
 import hubitat.zigbee.zcl.DataType
 
 metadata {
-    definition(name: "Yoolax Window Blinds", namespace: "mwerline", author: "Matt Werline") {
+    definition(name: "Yoolax Window Blinds", namespace: "mwerline", author: "Matt Werline", importUrl: "https://raw.githubusercontent.com/mwerline/hubitat/main/YoolaxWindowBlinds.groovy") {
         capability "Actuator"
         capability "Configuration"
         capability "Refresh"

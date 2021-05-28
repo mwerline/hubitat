@@ -191,10 +191,10 @@ def close() {
     def currentLevel = device.currentValue("deviceLevel")
     if(currentLevel == closeLevel) {
         if (descTextOutput) log.info "Blinds are already Fully Closed."
-    } else if(currentLevel == midLevel) {
-        hardClose()
-    } else if(currentLevel > closeLevel) {
-        setMidpoint()
+//    } else if(currentLevel == midLevel) {
+//        hardClose()
+//    } else if(currentLevel > closeLevel) {
+//        setMidpoint()
     } else {
         hardClose()
     }

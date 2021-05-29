@@ -22,7 +22,7 @@
  *    For Shangri-la Sheer Shades, when enabled, the “Midpoint” preference should be set to the level on your shades in which the sheer blades are fully open.
  *    The open/close commands will stop at the midpoint level if they are not already at that level. A subsequent issuance of the open/close will fully 
  *    open/close the shades. If you wish to bypass the midpoint, use the “hardOpen” or “hardClose” command in your automatons. You can also directly set the 
- *    shades to the shear open state (Midpoint) by calling the “setMidporint” command.
+ *    shades to the shear open state (Midpoint) by calling the “setMidpoint” command.
  *
  *    For all types of shades that the reported shade levels from the driver can be different from the actually physical level (deviceLevel attribute). 
  *    If the shades are at the close, open, or midpoint (Shangri-la only) it will report 0 or 100 level. This is done to prevent some controllers, like HomeKit, 

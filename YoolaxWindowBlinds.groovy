@@ -12,7 +12,22 @@
  *	for the specific language governing permissions and limitations under the License.
  *
  *
- *  IMPORTANT: Use the configure button after device is added to Hubitat
+ *  --> IMPORTANT: Use the configure button after device is added to Hubitat <--
+ *
+ *
+ *  Note about Driver Functionality (Please Read)
+ *    This driver by default is enabled to support the Yoolax Shangri-la Sheer Shades. If you do not have this style of shade from Yoolax you will want
+ *    to disable the “Enable Shangri-la Sheer Shade Functions” setting in the driver preferences. This will disable the Midpoint setting and logic. 
+ *
+ *    For Shangri-la Sheer Shades, when enabled, the “Midpoint” preference should be set to the level on your shades in which the sheer blades are fully open.
+ *    The open/close commands will stop at the midpoint level if they are not already at that level. A subsequent issuance of the open/close will fully 
+ *    open/close the shades. If you wish to bypass the midpoint, use the “hardOpen” or “hardClose” command in your automatons. You can also directly set the 
+ *    shades to the shear open state (Midpoint) by calling the “setMidporint” command.
+ *
+ *    For all types of shades that the reported shade levels from the driver can be different from the actually physical level (deviceLevel attribute). 
+ *    If the shades are at the close, open, or midpoint (Shangri-la only) it will report 0 or 100 level. This is done to prevent some controllers, like HomeKit, 
+ *    from reporting the blinds are still opening/closing. 
+ *
  */
 import hubitat.zigbee.zcl.DataType
 
@@ -41,8 +56,9 @@ metadata {
     preferences { 
         input name: "openLevel", type: "number", defaultValue: 100, range: "0..100", title: "Max open level", description: "Percentage used for the Shade's Fully Opened Level"    
         input name: "closeLevel", type: "number", defaultValue: 0, range: "0..100", title: "Closed level", description: "Percentage used for the Shade's Fully Closed Level"    
-        input name: "midLevel", type: "number", defaultValue: 50, range: "0..100", title: "Midpoint level", description: "Percentage used for the Shade's Midpoint Level"    
+        input name: "midLevel", type: "number", defaultValue: 50, range: "0..100", title: "Midpoint level", description: "Percentage used for the Shade's Midpoint Level (For Shangri-la Sheer Shades Only)"    
         
+        input name: "sheerShadeFlag", type: "bool", title: "Enable Shangri-la Sheer Shade Functions", defaultValue: true
         input name: "debugOutput", type: "bool", title: "Enable debug logging?", defaultValue: true
 		input name: "descTextOutput", type: "bool", title: "Enable descriptionText logging?", defaultValue: true
     }
@@ -111,7 +127,7 @@ def parse(String description) {
 def convertBatteryLevel(rawValue) {
     def batteryLevel = rawValue - 50
     batteryLevel = batteryLevel * 100
-    batteryLevel = batteryLevel.intdiv(150)
+	batteryLevel = batteryLevel.intdiv(150)
     return batteryLevel
 }
 
@@ -142,12 +158,13 @@ def levelEventHandler(currentLevel) {
     }
 }
 
+// Modify the reported level to compensate for Homekit assuming values other than 0 or 100 mean the shades are still opening/closing
 def setReportedLevel(rawLevel) {
    sendEvent(name: "deviceLevel", value: rawLevel)
    if(rawLevel == closeLevel) {
        sendEvent(name: "level", value: 0)
        sendEvent(name: "position", value: 0)
-   } else if (rawLevel ==  midLevel) {
+   } else if (rawLevel ==  midLevel && sheerShadeFlag) {
        sendEvent(name: "level", value: 10)
        sendEvent(name: "position", value: 10)       
    } else if (rawLevel ==  openLevel) {
@@ -170,6 +187,8 @@ def open() {
     def currentLevel = device.currentValue("deviceLevel")
     if(currentLevel >= openLevel) {
         if (descTextOutput) log.info "Blinds are already Fully Opened."
+    } else if(sheerShadeFlag == false) {
+        hardOpen()
     } else if(currentLevel == midLevel) {
         hardOpen()
     } else if(currentLevel > midLevel && currentLevel < closeLevel) {
@@ -185,12 +204,14 @@ def hardOpen() {
     setHardLevel(openLevel)
 }
 
-// Hard Close Blinds Command
+// Close Blinds Command
 def close() {
     if (descTextOutput) log.info "Closing the Blinds."
     def currentLevel = device.currentValue("deviceLevel")
     if(currentLevel == closeLevel) {
         if (descTextOutput) log.info "Blinds are already Fully Closed."
+    } else if(sheerShadeFlag == false) {
+        hardClose()
     } else if(currentLevel == midLevel) {
         hardClose()
     } else if(currentLevel > closeLevel) {
@@ -200,13 +221,13 @@ def close() {
     }
 }
 
-// Close Blinds Command
+// Hard Close Blinds Command
 def hardClose() {
     if (descTextOutput) log.info "Fully Closing the Blinds."
     setHardLevel(closeLevel)
 }
 
-// Close Blinds Command
+// Midpoint Command
 def setMidpoint() {
     if (descTextOutput) log.info "Moving Blinds to MidPoint Value."
     setHardLevel(midLevel)

@@ -26,7 +26,12 @@
  *
  *    For all types of shades that the reported shade levels from the driver can be different from the actually physical level (deviceLevel attribute). 
  *    If the shades are at the close, open, or midpoint (Shangri-la only) it will report 0 or 100 level. This is done to prevent some controllers, like HomeKit, 
- *    from reporting the blinds are still opening/closing. 
+ *    from reporting the blinds are still opening/closing.
+ *
+ *    The Settings maxReportingLift and maxReportingBattery adjust the max amount of time before the shades will report their level and battery state.
+ *    The default values should be OK for most, but if you are seeing battery drain try increasing these values, starting with the maxReportingLift as 
+ *    it defaults for 600 seconds (10 Minutes). Besure to use the configuration button after saving a change to these values as they will not be updated
+ *    on the device until the configruation command is executed.
  *
  */
 import hubitat.zigbee.zcl.DataType
@@ -57,7 +62,11 @@ metadata {
         input name: "openLevel", type: "number", defaultValue: 100, range: "0..100", title: "Max open level", description: "Percentage used for the Shade's Fully Opened Level"    
         input name: "closeLevel", type: "number", defaultValue: 0, range: "0..100", title: "Closed level", description: "Percentage used for the Shade's Fully Closed Level"    
         input name: "midLevel", type: "number", defaultValue: 50, range: "0..100", title: "Midpoint level", description: "Percentage used for the Shade's Midpoint Level (For Shangri-la Sheer Shades Only)"    
-        
+
+        input name: "maxReportingLift", type: "number", defaultValue: 600, range: "0..86400", title: "Zigbee Level Max Report Time (Seconds)", description: "Advanced Setting - Zigbee Max Report Time in Seconds for Shade Level"
+        input name: "maxReportingBattery", type: "number", defaultValue: 21600, range: "0..86400", title: "Zigbee Battery Max Report Time (Seconds)", description: "Advanced Setting - Zigbee Max Report Time in Seconds for Shade Battery Level"
+
+
         input name: "sheerShadeFlag", type: "bool", title: "Enable Shangri-la Sheer Shade Functions", defaultValue: true
         input name: "debugOutput", type: "bool", title: "Enable debug logging?", defaultValue: true
 		input name: "descTextOutput", type: "bool", title: "Enable descriptionText logging?", defaultValue: true
@@ -287,8 +296,8 @@ def refresh() {
 // Configure Device Reporting and Bindings
 def configure() {
     if (descTextOutput) log.info "Configuring Device Reporting and Bindings."
-    sendEvent(name: "checkInterval", value: 2 * 60 * 60 + 2 * 60, displayed: false, data: [protocol: "zigbee", hubHardwareId: device.hub.hardwareID])
-    def cmds = zigbee.configureReporting(CLUSTER_WINDOW_COVERING, ATTRIBUTE_POSITION_LIFT, DataType.UINT8, 0, 600, 0x01) + zigbee.configureReporting(CLUSTER_BATTERY_LEVEL, 0x0021, DataType.UINT8, 600, 21600, 0x01)
+    sendEvent(name: "checkInterval", value: 7320, displayed: false, data: [protocol: "zigbee", hubHardwareId: device.hub.hardwareID])
+    def cmds = zigbee.configureReporting(CLUSTER_WINDOW_COVERING, ATTRIBUTE_POSITION_LIFT, DataType.UINT8, 0, maxReportingLift.toInteger(), 0x01) + zigbee.configureReporting(CLUSTER_BATTERY_LEVEL, 0x0021, DataType.UINT8, 600, maxReportingBattery.toInteger(), 0x01)
     return refresh() + cmds
 }
 

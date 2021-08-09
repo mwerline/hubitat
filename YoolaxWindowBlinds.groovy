@@ -247,7 +247,7 @@ def setHardLevel(value) {
     if (debugOutput) log.debug "Setting the Blinds to level '${value}'."
     value = value.toInteger()
     runIn(5, refresh)
-    return zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_GOTO_LIFT_PERCENTAGE, zigbee.convertToHexString(99 - value, 2))
+    return zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_GOTO_LIFT_PERCENTAGE, zigbee.convertToHexString(openLevel.toInteger() - value, 2))
 }
 
 // Set Position Command
